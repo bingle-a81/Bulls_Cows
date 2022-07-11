@@ -8,74 +8,98 @@ import bills_caw_engine
 logging.config.dictConfig(logger_config)
 logger = logging.getLogger('app_logger.' + __name__)
 
-@dataclass()
-class Number:
-    ferst_number:str
-    second_number:str
-    therd_number:str
-    forth_number:str
+answers=0
+player=0
+enemy=0
 
-@dataclass()
-class QuontityAnimals:
-    bills:int
-    cows:int
+def get_all_answers()->list: # список всех ответов
+    ans=[]
+    # ans1=[]
+    for i in range(10000):
+        tmp=str(i).zfill(4)
 
-def checking_the_uniqueness_of_numbers(list_repeat:list)->Number:
-    numbers = ('0', '1', '2', '3', '4', '5', '6', '7', '8', '9',)
+    # удаляем числа с одинаковыми цифрами через set-множество ,где
+    #только уникальные значения множество!!!
+        if len(set(map(int,tmp)))==4:
+            ans.append(list(map(int,tmp)))
+    # print(len(ans))
+
+    #через генератор
+        #
+        # lst=['x' for num in tmp if tmp.count(num)==1]
+        # if len(lst)==4:
+        #     ans1.append(list(map(int, tmp)))
+
+    # print(len(ans1))
+    return ans
+
+
+def get_one_answer(ans:list)->list:#выбор один ответ из списка возм
+    num=random.choice(ans)
+    return num
+
+def input_number(): #запрос у пользователя
     while True:
-        numb=random.choice(numbers)
-        if numb not in list_repeat:
-            return numb
+        nums=input('Введите 4 цифры:')
+        if len(nums)!=4 or not nums.isdigit():
+            continue
+        nums=list(map(int,nums))
+        if len(set(nums))==4:
+            break
+    return nums
 
-
-def set_the_numbers()->list:
-    list_repeat=[]
-    i=0
-    while i<4:
-        number=checking_the_uniqueness_of_numbers(list_repeat)
-        list_repeat.append(number)
-        logger.debug(list_repeat)
-        i+=1
-    return list_repeat
-
-def checking_the_bulls(lst:list,lst2:list)->QuontityAnimals:
-    bulls_count = 0
-    cow_count = 0
-    for e in range(len(lst2)):
-        num = (lst2[e])
-        logger.debug(f'num={num}')
-        if num in lst:
-            if lst2.index(num) == lst.index(num):
-                bulls_count += 1
+def check(nums,true_nums):#возв колич  быков и коров
+    bulls,cows=0,0
+    for i,num in enumerate(nums):
+        if  num in true_nums:
+            if nums[i]==true_nums[i]:
+                bulls+=1
             else:
-                cow_count += 1
-        else:
-            pass
-    return QuontityAnimals(bulls_count,cow_count)
+                cows+=1
+    return bulls,cows
 
+
+def del_bad_answer(ans,enemy_try,bull,cow):#удаляет неподход варианты
+    for num in ans[:]:
+        temp_bull,temp_cow=check(num,enemy_try)
+        if temp_bull !=bull or temp_cow!=cow:
+            ans.remove(num)
+    return ans
 
 # ***********************************************************************
 # -----------------------------------------------------------------------
 #
 def main():
-    # hidden_numbers=set_the_numbers()
-    hidden_numbers=['7','9','1','3']
+    print('Игра быки коровы')
+    answers=get_all_answers()
+    enemy=get_one_answer(answers)
+    player=input_number()
     step=0
     while True:
-        # input_number=list(input())
-        if step==0:
-            input_number =['0', '1', '2', '3',]
-        else:
-            input_number=bills_caw_engine.set_the_numbers()
-        quontity=checking_the_bulls(hidden_numbers,input_number)
-        step+=1
-        if quontity.bills==4:
-            print(f'ПОБЕДА!кол-во попыток={step}')
+        # print('='*15,'Ход игрока','='*15)
+        # print('Угадайте число комп')
+        # number=input_number()
+        # bulls,cows=check(number,enemy)
+        # print(f'Bulls:{bulls}|Cows:{cows}')
+        # if bulls==4:
+        #     print('Player Win!')
+        #     print(f'Число было {enemy}')
+        #     break
+        step +=1
+        print('=' * 15, f'Ход компьютера:{step}', '=' * 15)
+        enemy_try=get_one_answer(answers)
+        print(f'Компьютер считает что вы загадали число {enemy_try}')
+        bulls, cows = check(enemy_try, player)
+        print(f'Bulls:{bulls}|Cows:{cows}')
+        if bulls == 4:
+            print('Comp WIN!')
+            print(f'Число было {enemy}')
             break
         else:
-            print(f'быков = {quontity.bills}')
-            print(f'коров = {quontity.cows}')
-        break
+            answers=del_bad_answer(answers,enemy_try,bulls,cows)
+
+
+
 
 
 # -----------------------------------------------------------------------
